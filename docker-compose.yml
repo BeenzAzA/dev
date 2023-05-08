@@ -1,0 +1,59 @@
+version: "3"
+
+services:
+    app:
+        build: ./consumer
+        restart: always
+        depends_on:
+         - my-influxdb
+        # links:
+        #  - my-rabbitmq
+        environment:
+         - INFLUX_HOST=my-influxdb
+        networks:
+         - rabbitmq_go_net          
+    
+    my-rabbitmq:
+        image: rabbitmq:3-management-alpine
+        container_name: 'my-rabbitmq'
+        volumes:
+         - ./rabbitmq:/var/lib/rabbitmq
+        ports:
+         - 5672:5672
+         - 15672:15672
+        networks:
+         - rabbitmq_go_net
+
+
+    my-influxdb:
+        image: influxdb:2.7
+        container_name: 'my-influx'
+        volumes:
+         - ./influxdb:/var/lib/influxdb2:rw
+        #  - ./influxconfig:/etc/influxdb2
+        restart: on-failure:10
+        ports:
+         - 8086:8086
+        environment:
+         - DOCKER_INFLUXDB_INIT_MODE=setup
+         - DOCKER_INFLUXDB_INIT_USERNAME=user
+         - DOCKER_INFLUXDB_INIT_PASSWORD=12345678
+         - DOCKER_INFLUXDB_INIT_ORG=iot
+         - DOCKER_INFLUXDB_INIT_BUCKET=buck
+         - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=x_jWIGc3EkaLiqdg9zSLT73Aubz3PzKPc3w9UoPeA7HHi77fNxQXEZVhe8-8HfYDuKfehJbslzrCLzXZZRasMA==
+        #  - INFLUXDB_ADMIN_USER=usr
+        #  - INFLUXDB_ADMIN_PASSWORD=12345678
+        networks:
+         - rabbitmq_go_net       
+
+# networks:
+#   rabbitmq_go_net:
+#     driver: bridge    
+# networks:
+#   hostnet:
+#     external: true
+#     name: host 
+networks:
+  rabbitmq_go_net:
+    driver: bridge      
+
